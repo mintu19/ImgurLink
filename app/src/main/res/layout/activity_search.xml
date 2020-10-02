@@ -31,7 +31,8 @@
             android:src="@drawable/ic_search_black_24dp"
             android:padding="10dp"
             android:layout_margin="0dp"
-            android:background="@color/white"/>
+            android:background="@color/white"
+            android:onClick="onSearchIconClick"/>
 
     </LinearLayout>
 
@@ -43,7 +44,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:padding="5dp"
-        android:visibility="invisible" />
+        android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/imagesGrid"

@@ -13,24 +13,26 @@ import com.akshit.imgurlink.apiHelpers.ClientException
 import com.akshit.imgurlink.apiHelpers.ServerException
 import com.akshit.imgurlink.apiHelpers.apis.GalleryApi
 import com.akshit.imgurlink.apiHelpers.models.Image
+import com.akshit.imgurlink.helpers.EndlessGridLayoutScrollListener
 import com.akshit.imgurlink.helpers.GridSpacingItemDecoration
 import com.akshit.imgurlink.helpers.displayMessage
 import kotlinx.android.synthetic.main.activity_search.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.android.Main
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-class SearchActivity : AppCompatActivity(), CoroutineScope {
+class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
 
     companion object {
         const val COLUMNS = 3
-        const val IMAGE_SIZE = 's'
+        const val IMAGE_SIZE = 't'
     }
 
-    override val coroutineContext: CoroutineContext = Dispatchers.Main
-
     private val images = mutableListOf<Image>()
-    private var page = 1
+    private var searchTerm = ""
+    private var nextPage = 1
 
     val watcher = object: TextWatcher {
         private var searchFor = ""
@@ -42,14 +44,15 @@ class SearchActivity : AppCompatActivity(), CoroutineScope {
 
             searchFor = searchText
 
-            GlobalScope.launch {
+            GlobalScope.launch(Dispatchers.Main) {
                 delay(300)  //debounce timeOut
                 if (searchText != searchFor)
                     return@launch
 
                 images.clear()
-                page = 1
-                getResults(searchFor, page)
+                nextPage = 1
+                searchTerm = searchFor
+                getResults(searchTerm, nextPage++)
             }
         }
 
@@ -64,32 +67,38 @@ class SearchActivity : AppCompatActivity(), CoroutineScope {
         imagesGrid.apply {
             layoutManager = GridLayoutManager(this@SearchActivity, COLUMNS)
             addItemDecoration(GridSpacingItemDecoration(COLUMNS, 10, true))
-            adapter = ImageGridAdapter(this@SearchActivity, images)
+            val myAdapter = ImageGridAdapter(this@SearchActivity, images)
+            myAdapter.itemClickListener = this@SearchActivity
+            adapter = myAdapter
+            addOnScrollListener(object : EndlessGridLayoutScrollListener() {
+                override fun loadMoreItems() {
+                    getResults(searchTerm, nextPage++)
+                }
+
+            })
         }
 
         searchBox.addTextChangedListener(watcher)
     }
 
     private fun getResults(text: String, page: Int) {
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.Main) {
             try {
-                runOnUiThread {
-                    progressBar.visibility = View.VISIBLE
-                }
+                progressBar.visibility = View.VISIBLE
                 val resp = GalleryApi().searchGallery(text, page)
                 val data = resp.data?.data
 
                 if (data == null) {
-                    runOnUiThread {
-                        displayMessage("No Results Found!!!")
-                    }
+                    displayMessage("No Results Found!!!")
                     return@launch
                 }
 
+                // extracting images from gallery result and filtering out animations
+                // animations and/or video thumbnails can used here when rebuild thumb link
                 data.forEach { item ->
                     item.images?.forEach { image ->
-                        if (!image.animated && image.link != null) {
-                            // Modifying link here
+                        if (image.link != null) {
+                            // Modifying link here for thumbnail
                             val idx = image.link.lastIndexOf(".")
                             image.thumbLink = StringBuilder(image.link).insert(idx, IMAGE_SIZE).toString()
                             images.add(image)
@@ -97,14 +106,12 @@ class SearchActivity : AppCompatActivity(), CoroutineScope {
                     }
                 }
 
-                runOnUiThread {
-                    if (images.isEmpty()) {
-                        displayMessage("No Results Found!!!")
-                    }
-
-                    imagesGrid.adapter?.notifyDataSetChanged()
-                    progressBar.visibility = View.INVISIBLE
+                if (images.isEmpty()) {
+                    displayMessage("No Results Found!!!")
                 }
+
+                imagesGrid.adapter?.notifyDataSetChanged()
+                progressBar.visibility = View.GONE
 
             } catch (e: ClientException) {
                 Log.e("SearchActivity", "Client Error: ${e.message}")
@@ -120,4 +127,19 @@ class SearchActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
+    override fun onClick(view: View, position: Int) {
+        Log.d("Test: $position", "")
+        position
+    }
+
+    fun onSearchIconClick(view: View) {
+        val text = searchBox.text.toString()
+
+        if (text == searchTerm) return
+
+        images.clear()
+        nextPage = 1
+        searchTerm = text
+        getResults(searchTerm, nextPage++)
+    }
 }
