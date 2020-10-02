@@ -1,5 +1,7 @@
 package com.akshit.imgurlink.apiHelpers.models
 
+import java.io.Serializable
+
 data class Image(
     val id: String,
     var title: String? = null,
@@ -9,4 +11,4 @@ data class Image(
     val type: String,
     val link: String? = null,
     var thumbLink: String? = null
-)
+): Serializable

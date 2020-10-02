@@ -20,7 +20,7 @@ class ImageGridAdapter(val context: Context, private val data: List<Image>): Rec
     }
 
     interface ItemClickListener {
-        fun onClick(view: View, position: Int): Unit
+        fun onItemClick(view: View, position: Int): Unit
     }
 
     var itemClickListener: ItemClickListener? = null
@@ -39,7 +39,7 @@ class ImageGridAdapter(val context: Context, private val data: List<Image>): Rec
         holder.textView.text = text
 
         holder.mainView.setOnClickListener {
-            itemClickListener?.onClick(holder.mainView, position)
+            itemClickListener?.onItemClick(holder.mainView, position)
         }
     }
 

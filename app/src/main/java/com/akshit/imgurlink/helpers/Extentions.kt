@@ -4,6 +4,8 @@ import android.view.View
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 
 inline fun View.snack(@StringRes messageRes: Int, length: Int = Snackbar.LENGTH_LONG, f: Snackbar.() -> Unit) {
@@ -31,4 +33,13 @@ inline fun AppCompatActivity.displayMessage(text: String, length: Int = Snackbar
 
 inline fun FragmentActivity.displayMessage(text: String, length: Int = Snackbar.LENGTH_SHORT, f: Snackbar.() -> Unit = {}) {
     this.findViewById<View>(android.R.id.content).snack(text, length, f)
+}
+
+/**
+ * @param columnWidth - in dp
+ */
+fun RecyclerView.autoFitColumns(columnWidth: Int) {
+    val displayMetrics = this.context.resources.displayMetrics
+    val noOfColumns = ((displayMetrics.widthPixels / displayMetrics.density) / columnWidth).toInt()
+    this.layoutManager = GridLayoutManager(this.context, noOfColumns)
 }

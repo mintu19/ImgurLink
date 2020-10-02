@@ -1,4 +1,4 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
-    <integer name="no_cols">3</integer>
+    <integer name="no_cols">5</integer>
 </resources>
