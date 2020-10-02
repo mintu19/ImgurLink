@@ -1,7 +1,6 @@
 package com.akshit.imgurlink.apiHelpers
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.Response

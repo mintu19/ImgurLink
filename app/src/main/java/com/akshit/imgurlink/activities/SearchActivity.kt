@@ -19,7 +19,6 @@ import com.akshit.imgurlink.helpers.displayMessage
 import kotlinx.android.synthetic.main.activity_search.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.android.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -33,7 +32,7 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
     private var searchTerm = ""
     private var nextPage = 1
 
-    val watcher = object: TextWatcher {
+    private val watcher = object: TextWatcher {
         private var searchFor = ""
 
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -44,13 +43,14 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
             searchFor = searchText
 
             GlobalScope.launch(Dispatchers.Main) {
-                delay(300)  //debounce timeOut
+                delay(350)  //debounce timeOut
                 if (searchText != searchFor)
                     return@launch
 
                 images.clear()
                 nextPage = 1
                 searchTerm = searchFor
+                // Todo: Cancel previous
                 getResults(searchTerm, nextPage++)
             }
         }
@@ -68,9 +68,9 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
 //            val cols = resources.getInteger(R.integer.no_cols)
 //            layoutManager = GridLayoutManager(this@SearchActivity, cols)
 //            addItemDecoration(GridSpacingItemDecoration(cols, 10, true))
-            // if using autofit
+            // if using autofit (also generate layout)
             autoFitColumns(120)
-            val myAdapter = ImageGridAdapter(this@SearchActivity, images)
+            val myAdapter = ImageGridAdapter(images)
             myAdapter.itemClickListener = this@SearchActivity
             adapter = myAdapter
             addOnScrollListener(object : EndlessGridLayoutScrollListener() {
@@ -81,7 +81,7 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
             })
         }
 
-        searchBox.addTextChangedListener(watcher)
+        commentBox.addTextChangedListener(watcher)
     }
 
     private fun getResults(text: String, page: Int) {
@@ -93,6 +93,11 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
 
                 if (data == null) {
                     displayMessage("No Results Found!!!")
+                    return@launch
+                }
+
+                // Todo: Replace with cancelTask
+                if (text != searchTerm) {
                     return@launch
                 }
 
@@ -115,7 +120,6 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
                 }
 
                 imagesGrid.adapter?.notifyDataSetChanged()
-                progressBar.visibility = View.GONE
 
             } catch (e: ClientException) {
                 Log.e("SearchActivity", "Client Error: ${e.message}")
@@ -127,7 +131,7 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
                 Log.e("SearchActivity", "Other Error: ", e)
                 displayMessage("Unable to fetch results")
             }
-
+            progressBar.visibility = View.GONE
         }
     }
 
@@ -145,7 +149,7 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
     }
 
     fun onSearchIconClick(view: View) {
-        val text = searchBox.text.toString()
+        val text = commentBox.text.toString()
 
         if (text == searchTerm) return
 

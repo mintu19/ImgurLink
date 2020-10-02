@@ -1,6 +1,5 @@
 package com.akshit.imgurlink.adapters
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,7 @@ import com.akshit.imgurlink.R
 import com.akshit.imgurlink.apiHelpers.models.Image
 import com.squareup.picasso.Picasso
 
-class ImageGridAdapter(val context: Context, private val data: List<Image>): RecyclerView.Adapter<ImageGridAdapter.MyViewHolder>() {
+class ImageGridAdapter(private val data: List<Image>): RecyclerView.Adapter<ImageGridAdapter.MyViewHolder>() {
 
     class MyViewHolder(val mainView: RelativeLayout) : RecyclerView.ViewHolder(mainView) {
         val imageView: ImageView = mainView.findViewById(R.id.itemImage)
