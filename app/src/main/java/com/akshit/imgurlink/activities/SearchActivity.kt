@@ -151,7 +151,7 @@ class SearchActivity : AppCompatActivity(), ImageGridAdapter.ItemClickListener {
     fun onSearchIconClick(view: View) {
         val text = commentBox.text.toString()
 
-        if (text == searchTerm) return
+        if (text == searchTerm && images.isNotEmpty()) return
 
         images.clear()
         nextPage = 1
